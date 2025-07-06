@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JOB MANAGEMENT</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <h1>JOB MANAGEMENT</h1>
+    <div class="grid-container">
+      <input required id="party-name" type="text" placeholder="Party Name:" />
+
+      <input required id="job-name" type="text" placeholder="Job Name:" />
+
+      <input required type="date" id="job-date" />
+      
+      <select required name="Jobs" id="job-sts">
+        <option value="" disabled selected hidden>JOB-STATUS:</option>
+        <option value="incomplete">INCOMPLETE</option>
+        <option value="inprocess">IN-PROCESS</option>
+        <option value="completed">COMPLETED</option>
+        <option value="delivered">DELIVERED</option>
+      </select>
+
+      <button class="job-add" onclick="addjob();">Add+</button>
+    </div>
+
+    <div class="job-container grid-container"></div>
+    <script src="script.js"></script>
+  </body>
+</html>
