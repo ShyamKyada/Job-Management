@@ -1,58 +1,115 @@
 let jobList = JSON.parse(localStorage.getItem('jobList') || '[]');
 
-displayItems();
+const partyInput = document.getElementById('party-name');
+const jobInput = document.getElementById('job-name');
+const dateInput = document.getElementById('job-date');
+const statusInput = document.getElementById('job-status');
+const jobTableBody = document.getElementById('job-list');
+const deliveredTableBody = document.getElementById('delivered-list');
+const addJobBtn = document.getElementById('add-job-btn');
+const toast = document.getElementById('toast');
 
-function saveJobs() {
-  localStorage.setItem('jobList', JSON.stringify(jobList))
-}
+addJobBtn.addEventListener('click', addJob);
+renderJobs();
 
-function deleteJob(i) {
-  jobList.splice(i,1);
-  saveJobs();
-  displayItems();
-}
+function addJob() {
+  const party = partyInput.value.trim();
+  const job = jobInput.value.trim();
+  const date = dateInput.value;
+  const status = statusInput.value;
 
-function addjob() {
-  let pNameElement = document.querySelector("#party-name");
-  let JNameElement = document.querySelector("#job-name");
-  let dateElement = document.querySelector("#job-date");
-  let stsElement = document.querySelector("#job-sts");
-
-  let partydetail = pNameElement.value;
-  let jobdetail = JNameElement.value;
-  let datedetail = dateElement.value;
-  let stsdetail = stsElement.value;
-  if (!partydetail || !jobdetail || !datedetail || !stsdetail) {
-    alert("Please fill in all fields before adding a job.");
+  if (!party || !job || !date || !status) {
+    showToast("Please fill in all fields ❗");
     return;
   }
-  jobList.push({
-    partyName: partydetail,
-    jobName: jobdetail,
-    date: datedetail,
-    job_sts: stsdetail,
-  });
+
+  jobList.push({ party, job, date, status });
   saveJobs();
-  pNameElement.value = "";
-  JNameElement.value = "";
-  dateElement.value = "";
-  stsElement.value = "";
-  displayItems();
+  renderJobs();
+  clearForm();
+  showToast("Job added ✅");
 }
 
-function displayItems() {
-  let containerElement = document.querySelector(".job-container");
-  let newHtml = "";
-  for (let i = 0; i < jobList.length; i++) {
-    let { partyName, jobName, date, job_sts } = jobList[i];
-    newHtml += `
-    <div>
-      <span>${partyName}</span>                     
-      <span>${jobName}</span>
-      <span>${date}</span>
-      <span>${job_sts}</span>
-      <button class='btn-delete' onclick="deleteJob(${i})">Delete</button>
-    </div>`;
+function deleteJob(index, isDelivered = false) {
+  if (isDelivered) {
+    const deliveredJobs = jobList.filter(job => job.status === "delivered");
+    const activeJobs = jobList.filter(job => job.status !== "delivered");
+    jobList = [...activeJobs, ...deliveredJobs.filter((_, i) => i !== index)];
+  } else {
+    jobList.splice(index, 1);
   }
-  containerElement.innerHTML = newHtml;
+  saveJobs();
+  renderJobs();
+  showToast("Job deleted 🗑️");
+}
+
+function renderJobs() {
+  const activeJobs = jobList.filter(job => job.status !== "delivered");
+  const deliveredJobs = jobList.filter(job => job.status === "delivered");
+
+  // Render Active Jobs
+  jobTableBody.innerHTML = activeJobs.map((item, index) => `
+    <tr>
+      <td>${item.party}</td>
+      <td>${item.job}</td>
+      <td>${item.date}</td>
+      <td>
+        <select class="status-select" data-index="${index}">
+          <option value="incomplete" ${item.status === "incomplete" ? "selected" : ""}>Incomplete</option>
+          <option value="inprocess" ${item.status === "inprocess" ? "selected" : ""}>In Process</option>
+          <option value="completed" ${item.status === "completed" ? "selected" : ""}>Completed</option>
+          <option value="delivered" ${item.status === "delivered" ? "selected" : ""}>Delivered</option>
+        </select>
+      </td>
+      <td><button class="btn-delete" onclick="deleteJob(${index})">Delete</button></td>
+    </tr>
+  `).join("");
+
+  document.querySelectorAll(".status-select").forEach(select => {
+    select.addEventListener("change", (e) => {
+      const i = e.target.getAttribute("data-index");
+      jobList[i].status = e.target.value;
+      saveJobs();
+      showToast("Status updated ✅");
+      renderJobs();
+    });
+  });
+
+  // Render Delivered Jobs
+  if (deliveredJobs.length === 0) {
+    deliveredTableBody.innerHTML = `
+      <tr class="placeholder-row">
+        <td colspan="5">No delivered jobs yet.</td>
+      </tr>
+    `;
+  } else {
+    deliveredTableBody.innerHTML = deliveredJobs.map((item, index) => `
+      <tr>
+        <td>${item.party}</td>
+        <td>${item.job}</td>
+        <td>${item.date}</td>
+        <td><span class="status-badge delivered">Delivered</span></td>
+        <td><button class="btn-delete" onclick="deleteJob(${index}, true)">Delete</button></td>
+      </tr>
+    `).join("");
+  }
+}
+
+function saveJobs() {
+  localStorage.setItem('jobList', JSON.stringify(jobList));
+}
+
+function clearForm() {
+  partyInput.value = "";
+  jobInput.value = "";
+  dateInput.value = "";
+  statusInput.value = "";
+}
+
+function showToast(message) {
+  toast.textContent = message;
+  toast.style.opacity = 1;
+  setTimeout(() => {
+    toast.style.opacity = 0;
+  }, 2000);
 }
